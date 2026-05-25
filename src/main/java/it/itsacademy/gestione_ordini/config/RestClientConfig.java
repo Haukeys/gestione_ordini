@@ -8,7 +8,7 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfig {
 
-    @Value("${payment.service.url:http://localhost:8082}") // URL par défaut si non définie dans application.properties
+    @Value("${payment.service.url}") // URL in application.properties
     private String paymentServiceUrl;
 
     @Bean
