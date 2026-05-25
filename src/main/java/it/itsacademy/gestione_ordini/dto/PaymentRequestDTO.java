@@ -14,7 +14,6 @@ import java.util.UUID;
 public class PaymentRequestDTO {//
 
     @NotNull(message = "idOrdine non puo essere null")
-    @NotBlank(message = "idOrdine non puo essere vuoto")
     private UUID idOrdine;
 
     @NotBlank(message = "totale non puo essere vuoto")

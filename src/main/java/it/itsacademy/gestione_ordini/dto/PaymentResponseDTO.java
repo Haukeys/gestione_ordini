@@ -11,17 +11,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaymentResponseDTO {
-    @NotNull(message = "id pagamento non puo essere null")
-    @NotBlank(message="idPagamento non puo essere vuoto")
+
     private UUID idPagamento;  // ID del pagamento generato da gestione_pagamento
 
-    @NotNull(message = "idOrdine non puo essere null")
-    @NotBlank(message = "idOrdine non puo essere vuoto")
     private UUID idOrdine;     // ID del ordine recepito
 
     // Riceviamo lo status sotto forma di string per evitare di clonarlo
     // l'enum "TipoPagamento" di gestione_pagamento
-    @NotNull(message = "statoPagamento non puo essere null")
-    @NotBlank(message = "statoPagamento non puo essere vuoto")
+
     private String statoPagamento;
 }
