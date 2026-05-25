@@ -17,8 +17,6 @@ import java.util.UUID;
 
 public class OrdineDTO {
 
-    @NotNull(message = "idOrdine non puo essere null")
-    @NotBlank(message = "idOrdine non puo essere vuoto")
     private UUID idOrdine;
 
     @NotBlank(message = "data di creazione non puo essere vuoto")
