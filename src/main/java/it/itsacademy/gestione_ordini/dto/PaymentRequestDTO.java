@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PaymentRequestDTO {//
 
-    @NotNull(message = "idOrdine non puo essere null")
+
     private UUID idOrdine;
 
     @NotBlank(message = "totale non puo essere vuoto")
