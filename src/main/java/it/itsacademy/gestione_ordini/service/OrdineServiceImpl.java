@@ -2,19 +2,20 @@ package it.itsacademy.gestione_ordini.service;
 
 
 import it.itsacademy.gestione_ordini.client.PaymentServiceClient;
-import it.itsacademy.gestione_ordini.dto.OrdineCreateDTO;
-import it.itsacademy.gestione_ordini.dto.OrdineResponseDTO;
-import it.itsacademy.gestione_ordini.dto.PaymentRequestDTO;
-import it.itsacademy.gestione_ordini.dto.PaymentResponseDTO;
+import it.itsacademy.gestione_ordini.dto.*;
 import it.itsacademy.gestione_ordini.entity.Ordine;
 import it.itsacademy.gestione_ordini.entity.TipoOrdine;
 import it.itsacademy.gestione_ordini.mapper.OrdineMapper;
 import it.itsacademy.gestione_ordini.repository.OrdineRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -62,6 +63,60 @@ public class OrdineServiceImpl implements OrdineService {
         ordine = ordineRepository.save(ordine);
         return ordineMapper.toOrdineResponseDTO(ordine);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrdineResponseDTO> getAllOrders() {
+        return ordineRepository.findAll()
+                .stream()
+                .map(ordineMapper::toOrdineResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * GET INFO ORDER (BY ID)
+     * Récupère une commande spécifique par son UUID.
+     * Si l'ID n'existe pas, lève une exception (Spring renverra un code 404).
+     */
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrdineResponseDTO getOrderInfo(UUID idOrdine) {
+        Ordine ordine = ordineRepository.findById(idOrdine)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato"));
+        return ordineMapper.toOrdineResponseDTO(ordine);
+    }
+
+    /**
+     * LOGICAL DELETE (Soft Delete)
+     * Au lieu de faire un repository.delete(), on passe le statut à ELIMINATO.
+     * Une commande supprimée logiquement reste en BDD pour l'historique.
+     */
+
+    @Override
+    @Transactional
+    public OrdineResponseDTO logicalDeleteOrder(UUID idOrdine) {
+        Ordine ordine = ordineRepository.findById(idOrdine)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato"));
+
+        // Règle métier : On applique le statut ELIMINATO
+        ordine.setStatoOrdine(TipoOrdine.ELIMINATO);
+
+        // Sauvegarde de la modification
+        ordine = ordineRepository.save(ordine);
+        return ordineMapper.toOrdineResponseDTO(ordine);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<PagamentoHistoryDTO> getOrdinePagamentiLista(UUID idOrdine) {
+        // Optionnel : Sécurité pour vérifier que l'ordre existe chez nous
+        if (!ordineRepository.existsById(idOrdine)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato");
+        }
+
+        // Appel du microservice paiement via le RestClient
+        return paymentServiceClient.getPaymentsHistory(idOrdine);
+    }
+
 }
 
 
