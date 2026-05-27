@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class PaymentServiceClient {
+public class PaymentServiceClient {//considere cette classe comme etant un service reel mais avec une structure speciale
 
     private final RestClient paymentRestClient;
 
@@ -42,5 +42,28 @@ public class PaymentServiceClient {
             return Collections.emptyList();
         }
     }
+    public PaymentResponseDTO getPaymentStatusByOrdineId(UUID idOrdine) {
+        try {
+            // 1. On récupère un tableau [] de PaymentResponseDTO
+            PaymentResponseDTO[] responses = paymentRestClient.get()
+                    .uri("/pagamenti/ordine/{idOrdine}", idOrdine)
+                    .retrieve()
+                    .body(PaymentResponseDTO[].class);
 
-}
+            // 2. On analyse le tableau pour retourner le bon état au service
+            if (responses != null && responses.length > 0) {
+                // On cherche en priorité s'il y a une tentative acceptée ("ACCETTATO")
+                for (PaymentResponseDTO r : responses) {
+                    if ("ACCETTATO".equalsIgnoreCase(r.getStatoPagamento())) {
+                        return r; // On retourne immédiatement la réponse validée
+                    }
+                }
+                // Si aucun n'est accepté, on retourne la première réponse de la liste (ex: RIFIUTATO)
+                return responses[0];
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Errore di comunicazione per lo stato pagamento: " + e.getMessage());
+            return null;
+        }
+    }}
