@@ -3,17 +3,17 @@ package it.itsacademy.gestione_ordini.controller;
 
 
 import it.itsacademy.gestione_ordini.dto.OrdineCreateDTO;
+import it.itsacademy.gestione_ordini.dto.OrdineDTO;
 import it.itsacademy.gestione_ordini.dto.OrdineResponseDTO;
 import it.itsacademy.gestione_ordini.dto.PagamentoHistoryDTO;
 import it.itsacademy.gestione_ordini.entity.Ordine;
-import it.itsacademy.gestione_ordini.entity.TipoOrdine;
 import it.itsacademy.gestione_ordini.service.OrdineServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -44,22 +44,17 @@ public class OrdineController {
      * e aggiorna lo stato del ordine a secondo della response(PAGATO o DAPAGARE)
      */
 
-    @PutMapping(path = "/{id}/paga")
-    public ResponseEntity<OrdineResponseDTO> payOrder(@Valid @PathVariable("id") UUID idOrdine) {
+// C'est cette méthode que tu vas appeler avec Postman
+    @PostMapping("/{id}/paga")
+    public ResponseEntity<String> inviaPagamento(@PathVariable UUID id) {
 
-        OrdineResponseDTO response = ordineService.updateOrdine(idOrdine);
+        // On appelle le service qui contient notre PaymentPublisherAMQP (sans Jackson !)
+        ordineService.inviaPagamentoOrdine(id);
 
-        //Si le paiement est validé, on renvoie un statut 200 OK
-        if (response.getStatoOrdine() == TipoOrdine.PAGATO) {
-            return ResponseEntity.ok(response);
-        }
-
-        //Si le paiement a échoué (DAPAGARE), le contrôleur lève manuellement une exception 402
-        throw new ResponseStatusException(
-                HttpStatus.PAYMENT_REQUIRED,
-                "Il pagamento ha fallito. L'ordine rimane in stato DAPAGARE."
-        );
+        // On répond immédiatement au client
+        return ResponseEntity.ok("Richiesta di pagamento mandato a RabbitMQ con successo !");
     }
+
 
     @GetMapping
     public ResponseEntity<List<OrdineResponseDTO>> getAllOrders() {
@@ -79,9 +74,16 @@ public class OrdineController {
         return ResponseEntity.ok(ordineService.logicalDeleteOrder(idOrdine));
     }
 
-    @GetMapping("/{idOrdine}/pagamenti")
+   @GetMapping("/{idOrdine}/pagamenti")
     public ResponseEntity<List<PagamentoHistoryDTO>> getListaPagamentiOrdine(@PathVariable UUID idOrdine) {
         List<PagamentoHistoryDTO> lista = ordineService.getOrdinePagamentiLista(idOrdine);
         return ResponseEntity.ok(lista);
+    }
+    @GetMapping("/{id}/infoPagamenti")
+    public ResponseEntity<OrdineDTO> getInfoPagamenti(@PathVariable UUID id) {
+        // Ici, on appelle enfin la méthode de ton service !
+        OrdineDTO ordineDTO = ordineService.getInfoPagamento(id);
+
+        return ResponseEntity.ok(ordineDTO);
     }
 }

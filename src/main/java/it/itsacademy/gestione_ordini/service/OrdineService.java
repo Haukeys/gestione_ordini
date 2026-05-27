@@ -12,9 +12,10 @@ import java.util.UUID;
 public interface OrdineService {
 
     public Ordine createOrdine(OrdineCreateDTO ordinecreateDTO);
-    public OrdineResponseDTO updateOrdine(UUID idOrdine);
+    public void inviaPagamentoOrdine(UUID idOrdine);//CAMBIATO PER L IMPLEMENTAZIONE CON RABBIT
     public List<OrdineResponseDTO> getAllOrders();
     public OrdineResponseDTO getOrderInfo(UUID idOrdine);
     public OrdineResponseDTO logicalDeleteOrder(UUID idOrdine);
     public List<PagamentoHistoryDTO> getOrdinePagamentiLista(UUID idOrdine);
+    public OrdineDTO getInfoPagamento(UUID idOrdine);
 }
