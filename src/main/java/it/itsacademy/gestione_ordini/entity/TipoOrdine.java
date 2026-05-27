@@ -1,5 +1,5 @@
 package it.itsacademy.gestione_ordini.entity;
 
 public enum TipoOrdine {
-    DAPAGARE,PAGATO,ELIMINATO
+    DAPAGARE,PAGATO,ELIMINATO,IN_ELABORAZIONE
 }
