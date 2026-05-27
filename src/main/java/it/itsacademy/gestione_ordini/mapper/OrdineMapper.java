@@ -12,8 +12,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring",imports = {TipoOrdine.class})
 public interface OrdineMapper {
 
-    @Mapping(target = "idOrdine", ignore = true)
-    @Mapping(target="statoOrdine",ignore = true)
+    @Mapping(target = "idOrdine", ignore = true)//ce sont, dans ce cas c'est, un des parametre a ignorer lord de la creation car il sont gere sans avoir a le faire manuellement
+    @Mapping(target= "statoOrdine",ignore = true)
     Ordine toOrdine(OrdineCreateDTO ordineDTO);
 
     OrdineDTO toOrdineDTO(Ordine ordine);
