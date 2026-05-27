@@ -7,10 +7,8 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class OrdineCreateDTO {//per la crezaione del ordine
+public class OrdineCreateDTO {//per la creazione del ordine senza datacreazione perche settato in service
 
-    @NotNull(message = "data di creazione non puo essere null")
-    private LocalDate dataCreazione;
 
     @NotBlank(message = "descrizione non puo essere vuota")
     private String descrizione;
