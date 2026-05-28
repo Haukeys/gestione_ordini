@@ -10,7 +10,7 @@
     </parent>
     <groupId>it.itsacademy</groupId>
     <artifactId>gestione_ordini</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1-</version>
     <name>gestione_ordini</name>
     <description>gestione_ordini</description>
     <url/>
