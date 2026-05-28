@@ -19,7 +19,7 @@ public class OrdineDTO {
 
     private UUID idOrdine;
 
-    @NotBlank(message = "data di creazione non puo essere vuoto")
+
     @NotNull(message = "data di creazione non puo essere null")
     private LocalDate dataCreazione;
 
@@ -27,11 +27,11 @@ public class OrdineDTO {
     @NotNull(message = "descrizione non puo essere vuoto")
     private String descrizione;
 
-    @NotBlank(message = "statoOrdine non puo essere vuoto")
+
     @NotNull(message = "statoOrdine non puo essere vuoto")
     private TipoOrdine statoOrdine;
 
-    @NotBlank(message = "totale non puo essere vuoto")
+
     @NotNull(message = "totale non puo essere vuoto")
     @Positive(message = "totale deve essere positivo")
     private Double totale;

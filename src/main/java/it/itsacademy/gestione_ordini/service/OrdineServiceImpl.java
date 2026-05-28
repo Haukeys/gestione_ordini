@@ -117,30 +117,22 @@ public class OrdineServiceImpl implements OrdineService {
     @Override
     @Transactional
     public OrdineDTO getInfoPagamento(UUID idOrdine) {
-        // 1. Récupérer l'entité Ordine depuis la BDD
         Ordine ordine = ordineRepository.findById(idOrdine)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato"));
 
-        // 2. Si la commande est déjà traitée (PAGATO ou ELIMINATO), on évite un appel réseau inutile
         if (ordine.getStatoOrdine() == TipoOrdine.IN_ELABORAZIONE) {
-
-            // 3. Appeler le client mis à jour (qui gère le tableau JSON en arrière-plan)
             PaymentResponseDTO paymentResponse = paymentServiceClient.getPaymentStatusByOrdineId(idOrdine);
 
             if (paymentResponse != null) {
-                // Mettre à jour l'état de l'ordre selon la réponse du paiement
                 if ("ACCETTATO".equalsIgnoreCase(paymentResponse.getStatoPagamento())) {
                     ordine.setStatoOrdine(TipoOrdine.PAGATO);
                 } else if ("RIFIUTATO".equalsIgnoreCase(paymentResponse.getStatoPagamento())) {
-                    ordine.setStatoOrdine(TipoOrdine.IN_ELABORAZIONE    );
+                    // CORRECTION : Remettre DAPAGARE au lieu de laisser bloqué en IN_ELABORAZIONE
+                    ordine.setStatoOrdine(TipoOrdine.DAPAGARE);
                 }
-
-                // Sauvegarder les modifications dans MySQL
                 ordineRepository.save(ordine);
             }
         }
-
-        // Utilisation de ton mapper injecté (MapStruct)
         return ordineMapper.toOrdineDTO(ordine);
     }
 

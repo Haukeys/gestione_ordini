@@ -44,24 +44,11 @@ public class PaymentServiceClient {//considere cette classe comme etant un servi
     }
     public PaymentResponseDTO getPaymentStatusByOrdineId(UUID idOrdine) {
         try {
-            // 1. On récupère un tableau [] de PaymentResponseDTO
-            PaymentResponseDTO[] responses = paymentRestClient.get()
-                    .uri("/pagamenti/ordine/{idOrdine}", idOrdine)
+            // CORRECTION : URI alignée sur le controleur de l'autre microservice et type unique (pas de tableau)
+            return paymentRestClient.get()
+                    .uri("/pagamenti/ordine/{idOrdine}/status", idOrdine)
                     .retrieve()
-                    .body(PaymentResponseDTO[].class);
-
-            // 2. On analyse le tableau pour retourner le bon état au service
-            if (responses != null && responses.length > 0) {
-                // On cherche en priorité s'il y a une tentative acceptée ("ACCETTATO")
-                for (PaymentResponseDTO r : responses) {
-                    if ("ACCETTATO".equalsIgnoreCase(r.getStatoPagamento())) {
-                        return r; // On retourne immédiatement la réponse validée
-                    }
-                }
-                // Si aucun n'est accepté, on retourne la première réponse de la liste (ex: RIFIUTATO)
-                return responses[0];
-            }
-            return null;
+                    .body(PaymentResponseDTO.class);
         } catch (Exception e) {
             System.err.println("Errore di comunicazione per lo stato pagamento: " + e.getMessage());
             return null;
