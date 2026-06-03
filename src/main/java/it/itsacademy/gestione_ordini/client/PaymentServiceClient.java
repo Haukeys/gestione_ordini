@@ -36,21 +36,24 @@ public class PaymentServiceClient {//considere cette classe comme etant un servi
             return paymentRestClient.get()
                     .uri("/pagamenti/ordine/{idOrdine}", idOrdine)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<List<PagamentoHistoryDTO>>() {});
+                    .body(new ParameterizedTypeReference<List<PagamentoHistoryDTO>>() {
+                    });
         } catch (Exception e) {
             // En cas d'erreur ou si le service 8081 est down, on renvoie une liste vide (ou on lève une exception)
             return Collections.emptyList();
         }
+
     }
+
     public PaymentResponseDTO getPaymentStatusByOrdineId(UUID idOrdine) {
         try {
-            // CORRECTION : URI alignée sur le controleur de l'autre microservice et type unique (pas de tableau)
+            String url = "/pagamenti/ordine/" + idOrdine.toString() + "/status";
             return paymentRestClient.get()
-                    .uri("/pagamenti/ordine/{idOrdine}/status", idOrdine)
+                    .uri(url)
                     .retrieve()
                     .body(PaymentResponseDTO.class);
         } catch (Exception e) {
-            System.err.println("Errore di comunicazione per lo stato pagamento: " + e.getMessage());
+            System.err.println("ERRORE COMPLETO: " + e.getClass().getName() + " - " + e.getMessage());
             return null;
         }
     }}
