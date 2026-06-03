@@ -16,7 +16,7 @@ public class PaymentRequestDTO {//
 
     private UUID idOrdine;
 
-    @NotBlank(message = "totale non puo essere vuoto")
+    //@NotBlank(message = "totale non puo essere vuoto")essaye pour docker
     @NotNull(message = "totale non puo essere null")
     @Positive(message = "totale deve essere positivo")
     private Double totale;
