@@ -58,6 +58,7 @@ public class OrdineServiceImpl implements OrdineService {
         // Envoi du DTO via Jackson dans RabbitMQ
         PaymentRequestDTO requestDTO = new PaymentRequestDTO();
         requestDTO.setIdOrdine(idOrdine);
+        requestDTO.setTotale(ordine.getTotale());//ajout pour test docker
         paymentPublisherAMQP.publishPaymentRequest(requestDTO);
     }
 
