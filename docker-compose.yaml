@@ -22,13 +22,13 @@ services:
       - spring_docker_amqp
 
   gestione-ordini:
-    image: haukeys/gestione_ordini:0.0.1
+    image: haukeys/gestione_ordini:0.0.2
     build:
       context: .
       dockerfile: Dockerfile
     container_name: gestione-ordini
     ports:
-      - "8080:8080"
+      - "8082:8080"
     environment:
       - PORT=8080
       - MYSQL_URL=jdbc:mysql://mysql_container:3306/gestione_ordini
@@ -36,7 +36,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - SERVLET_CONTEXT_PATH=/api
       - API_DOCS_PATH=/v3/api-docs
-      - PAYMENT_SERVICE_URL=http://gestione-pagamento:8081/api
+      - PAYMENT_SERVICE_URL=http://gestione-pagamento:8080/api
       - RABBITMQ_HOST=rabbitq_container
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
@@ -44,7 +44,11 @@ services:
     depends_on:
       - db
       - rabbitmq
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/ordini/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - spring_docker_amqp
 
@@ -52,10 +56,10 @@ services:
     build:
       context: ../gestione_pagamento
       dockerfile: Dockerfile
-    image: haukeys/gestione_pagamento:0.0.1
+    image: haukeys/gestione_pagamento:0.0.2
     container_name: gestione-pagamento
     ports:
-      - "8081:8081"
+      - "8081:8080"
     environment:
       - PORT=8080
       - MYSQL_URL=jdbc:mysql://mysql_container:3306/gestione_pagamento
@@ -67,10 +71,30 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
+      - CRON_CLEAN_PAYMENTS_RATE=300000
     depends_on:
       - db
       - rabbitmq
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/pagamenti/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spring_docker_amqp
+  gateway:
+    build:
+      context: ../gateway_ordini_pagamento
+      dockerfile: Dockerfile
+    image: haukeys/gateway_ordini_pagamento:0.0.1
+    container_name: gateway-ordini-pagamento
+    ports:
+      - "8080:8080"
+    depends_on:
+      gestione-ordini:
+          condition: service_healthy
+      gestione-pagamento:
+          condition: service_healthy
     networks:
       - spring_docker_amqp
 
@@ -81,6 +105,7 @@ volumes:
   mysql_volume:
     external: true
     name: mysql_volume
+
 
 
 
