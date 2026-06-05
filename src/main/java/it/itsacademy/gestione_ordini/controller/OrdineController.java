@@ -86,4 +86,6 @@ public class OrdineController {
 
         return ResponseEntity.ok(ordineDTO);
     }
+    @GetMapping(path = "/health")
+    public void health() {}
 }
