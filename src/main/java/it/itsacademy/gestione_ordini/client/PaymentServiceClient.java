@@ -56,4 +56,5 @@ public class PaymentServiceClient {//considere cette classe comme etant un servi
             System.err.println("ERRORE COMPLETO: " + e.getClass().getName() + " - " + e.getMessage());
             return null;
         }
-    }}
+    }
+}

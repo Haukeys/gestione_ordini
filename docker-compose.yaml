@@ -18,29 +18,61 @@ services:
     ports:
       - "5673:5672"
       - "15673:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spring_docker_amqp
+
+  gestione-auth:
+    build:
+      context: ../gestione_ordini_auth
+      dockerfile: Dockerfile
+    image: haukeys/gestione_ordini_auth:0.0.1
+    container_name: gestione-auth
+    ports:
+      - "8083:8080" # Port externe 8083 pour éviter les conflits avec ordini (8082) et pagamento (8081)
+    environment:
+      - PORT=8080
+      - MYSQL_URL_AUTH=${MYSQL_URL_AUTH}
+      - MYSQL_USERNAME=${MYSQL_USERNAME}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - SERVLET_CONTEXT_PATH=/api
+      - API_DOCS_PATH=/v3/api-docs
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION_TIME=${JWT_EXPIRATION_TIME}
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/health"] # À condition d'avoir un endpoint de health
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - spring_docker_amqp
 
   gestione-ordini:
     image: haukeys/gestione_ordini:0.0.2
     build:
-      context: .
+      context: ../gestione_ordini
       dockerfile: Dockerfile
     container_name: gestione-ordini
     ports:
       - "8082:8080"
     environment:
       - PORT=8080
-      - MYSQL_URL=jdbc:mysql://mysql_container:3306/gestione_ordini
+      - MYSQL_URL=${MYSQL_URL}
       - MYSQL_USERNAME=${MYSQL_USERNAME}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - SERVLET_CONTEXT_PATH=/api
       - API_DOCS_PATH=/v3/api-docs
-      - PAYMENT_SERVICE_URL=http://gestione-pagamento:8080/api
       - RABBITMQ_HOST=rabbitq_container
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=guest
-      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - PAYMENT_SERVICE_URL=http://gestione-pagamento:8080/api
     depends_on:
       - db
       - rabbitmq
@@ -62,16 +94,16 @@ services:
       - "8081:8080"
     environment:
       - PORT=8080
-      - MYSQL_URL=jdbc:mysql://mysql_container:3306/gestione_pagamento
+      - MYSQL_URL_PAGAMENTO=${MYSQL_URL_PAGAMENTO} # reste en MYSQL_URL
       - MYSQL_USERNAME=${MYSQL_USERNAME}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - SERVLET_CONTEXT_PATH=/api
       - API_DOCS_PATH=/v3/api-docs
-      - RABBITMQ_HOST=rabbitq_container
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=guest
-      - RABBITMQ_PASSWORD=guest
-      - CRON_CLEAN_PAYMENTS_RATE=300000
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - CRON_CLEAN_PAYMENTS_RATE=${CRON_CLEAN_PAYMENTS_RATE}
     depends_on:
       - db
       - rabbitmq
@@ -82,6 +114,7 @@ services:
       retries: 5
     networks:
       - spring_docker_amqp
+
   gateway:
     build:
       context: ../gateway_ordini_pagamento
@@ -90,11 +123,20 @@ services:
     container_name: gateway-ordini-pagamento
     ports:
       - "8080:8080"
-    depends_on:
-      gestione-ordini:
-          condition: service_healthy
-      gestione-pagamento:
-          condition: service_healthy
+    environment:
+      - GATEWAY_PORT=8080
+      - GESTIONE_AUTH_HOST=gestione-auth
+      - GESTIONE_AUTH_PORT=8080
+      - PATH_AUTH=api/auth
+      - GESTIONE_ORDINI_HOST=gestione-ordini
+      - GESTIONE_ORDINI_PORT=8080
+      - PATH_ORDINI=api/ordini
+      - GESTIONE_PAGAMENTO_HOST=gestione-pagamento
+      - GESTIONE_PAGAMENTO_PORT=8080
+      - PATH_PAGAMENTO=api/pagamenti
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION_TIME=${JWT_EXPIRATION_TIME}
+
     networks:
       - spring_docker_amqp
 
