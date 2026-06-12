@@ -46,10 +46,10 @@ public class OrdineController {
 
 // C'est cette méthode que tu vas appeler avec Postman
     @PostMapping("/{id}/paga")
-    public ResponseEntity<String> inviaPagamento(@PathVariable UUID id) {
+    public ResponseEntity<String> inviaPagamento(@PathVariable UUID id,@RequestHeader("X-User-Id")UUID idUtente) {
 
         // On appelle le service qui contient notre PaymentPublisherAMQP (sans Jackson !)
-        ordineService.inviaPagamentoOrdine(id);
+        ordineService.inviaPagamentoOrdine(id,idUtente);
 
         // On répond immédiatement au client
         return ResponseEntity.ok("Richiesta di pagamento mandato a RabbitMQ con successo !");
