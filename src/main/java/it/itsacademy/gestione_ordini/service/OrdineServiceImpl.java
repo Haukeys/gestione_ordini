@@ -47,7 +47,7 @@ public class OrdineServiceImpl implements OrdineService {
     // 1. MÉTHODE ASYNCHRONE : Envoi de la commande à RabbitMQ
     @Override
     @Transactional
-    public void inviaPagamentoOrdine(UUID idOrdine) {
+    public void inviaPagamentoOrdine(UUID idOrdine, UUID idUtente) {//on ajoute idUtente pour que le cycle avec la traçabiliter des emails soit possible entre les 3 acteurs
         Ordine ordine = ordineRepository.findById(idOrdine)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato"));
 
@@ -58,6 +58,7 @@ public class OrdineServiceImpl implements OrdineService {
         // Envoi du DTO via Jackson dans RabbitMQ
         PaymentRequestDTO requestDTO = new PaymentRequestDTO();
         requestDTO.setIdOrdine(idOrdine);
+        requestDTO.setIdUtente(idUtente);//ajout pour le teste avec l'email
         requestDTO.setTotale(ordine.getTotale());//ajout pour test docker
         paymentPublisherAMQP.publishPaymentRequest(requestDTO);
     }
