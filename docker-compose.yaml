@@ -13,8 +13,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitq_container
-    hostname: rabbitq_container
+    container_name: rabbitmq_container
+    hostname: rabbitmq_container
     ports:
       - "5673:5672"
       - "15673:15672"
@@ -154,6 +154,6 @@ volumes:
     name: mysql_volume
 
 
-
+#dans notre cas avec logback les fichiers log de pagamento seron dans un ".log" qui existe dans le docker et sera effacer à chaque lancement.
 
 
