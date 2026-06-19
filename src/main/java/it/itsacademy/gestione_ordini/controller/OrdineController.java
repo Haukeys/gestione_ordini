@@ -8,8 +8,10 @@ import it.itsacademy.gestione_ordini.dto.OrdineResponseDTO;
 import it.itsacademy.gestione_ordini.dto.PagamentoHistoryDTO;
 import it.itsacademy.gestione_ordini.entity.Ordine;
 import it.itsacademy.gestione_ordini.service.OrdineServiceImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/ordini")
 @RequiredArgsConstructor
@@ -32,7 +35,11 @@ public class OrdineController {
      */
 
     @PostMapping
-    public ResponseEntity<Ordine> createOrder(@Valid @RequestBody OrdineCreateDTO ordineDTO) {
+    public ResponseEntity<Ordine> createOrder(@Valid @RequestBody OrdineCreateDTO ordineDTO,
+                                              HttpServletRequest httpRequest) {
+
+        logRequestInfos(httpRequest);
+
         Ordine createdOrder = ordineService.createOrdine(ordineDTO);
         return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
     }
@@ -46,8 +53,11 @@ public class OrdineController {
 
 // C'est cette méthode que tu vas appeler avec Postman
     @PostMapping("/{id}/paga")
-    public ResponseEntity<String> inviaPagamento(@PathVariable UUID id,@RequestHeader("X-User-Id")UUID idUtente) {
+    public ResponseEntity<String> inviaPagamento(@PathVariable UUID id,@RequestHeader("X-User-Id")UUID idUtente,
+                                                 HttpServletRequest httpRequest) {
 
+
+        logRequestInfos(httpRequest);
         // On appelle le service qui contient notre PaymentPublisherAMQP (sans Jackson !)
         ordineService.inviaPagamentoOrdine(id,idUtente);
 
@@ -57,35 +67,68 @@ public class OrdineController {
 
 
     @GetMapping
-    public ResponseEntity<List<OrdineResponseDTO>> getAllOrders() {
+    public ResponseEntity<List<OrdineResponseDTO>> getAllOrders(
+            HttpServletRequest httpRequest) {
+
+        logRequestInfos(httpRequest);
+
         return ResponseEntity.ok(ordineService.getAllOrders());
     }
 
 
     @GetMapping(path = "/{id}")
-    public ResponseEntity<OrdineResponseDTO> getOrderInfo(@Valid @PathVariable("id") UUID idOrdine) {
+    public ResponseEntity<OrdineResponseDTO> getOrderInfo(@Valid @PathVariable("id") UUID idOrdine,
+                                                          HttpServletRequest httpRequest) {
+        logRequestInfos(httpRequest);
+
         return ResponseEntity.ok(ordineService.getOrderInfo(idOrdine));
     }
 
 
     @DeleteMapping(path = "/{id}")
-    public ResponseEntity<OrdineResponseDTO> deleteOrder(@Valid @PathVariable("id") UUID idOrdine) {
+    public ResponseEntity<OrdineResponseDTO> deleteOrder(@Valid @PathVariable("id") UUID idOrdine,
+                                                         HttpServletRequest httpRequest) {
+
+        logRequestInfos(httpRequest);
         // Torna l'oggetto aggiornato con statoOrdine "ELIMINATO"
         return ResponseEntity.ok(ordineService.logicalDeleteOrder(idOrdine));
     }
 
    @GetMapping("/{idOrdine}/pagamenti")
-    public ResponseEntity<List<PagamentoHistoryDTO>> getListaPagamentiOrdine(@PathVariable UUID idOrdine) {
+    public ResponseEntity<List<PagamentoHistoryDTO>> getListaPagamentiOrdine(@PathVariable UUID idOrdine,
+                                                                             HttpServletRequest httpRequest) {
+
+       logRequestInfos(httpRequest);
+
         List<PagamentoHistoryDTO> lista = ordineService.getOrdinePagamentiLista(idOrdine);
         return ResponseEntity.ok(lista);
     }
     @GetMapping("/{id}/infoPagamenti")
-    public ResponseEntity<OrdineDTO> getInfoPagamenti(@PathVariable UUID id) {
+    public ResponseEntity<OrdineDTO> getInfoPagamenti(@PathVariable UUID id,
+                                                      HttpServletRequest httpRequest) {
+
+        logRequestInfos(httpRequest);
+
         // Ici, on appelle enfin la méthode de ton service !
         OrdineDTO ordineDTO = ordineService.getInfoPagamento(id);
 
         return ResponseEntity.ok(ordineDTO);
     }
     @GetMapping(path = "/health")
-    public void health() {}
+    public void health() {
+
+    }
+
+    private void logRequestInfos(HttpServletRequest request) {
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+        String userId = request.getHeader("X-User-Id");
+        String username = request.getHeader("X-User-Name");
+
+        String userIdentifier = (username != null && userId != null)
+                ? username + " (ID: " + userId + ")"
+                : "Systeme / Unknow";
+
+        log.info("[API ACTION] User: {} | Method: {} | URI: {}", userIdentifier, method, uri);
+    }
 }
