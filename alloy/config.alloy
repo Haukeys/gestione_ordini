@@ -1,0 +1,34 @@
+local.file_match "application_logs" {
+	path_targets = [
+		{__address__ = "localhost", __path__ = "/var/log/apps/gestione-pagamento.log", app = "gestione-pagamento", env = "development"},
+		{__address__ = "localhost", __path__ = "/var/log/apps/gestione-ordini.log", app = "gestione-ordini", env = "development"},
+	]
+}
+
+// 2. Lecture des fichiers : on envoie vers le processeur (process_logs)
+loki.source.file "log_scraper" {
+    targets    = local.file_match.application_logs.targets//PREND LA CIBLE
+    forward_to = [loki.process.process_logs.receiver]//L ENVOI VERS LE PROCHAIN RECEPTEUR
+}
+
+// 3. Parsing des logs : Extraction du niveau (INFO, ERROR, etc.)
+loki.process "process_logs" {//RECOI DEPUIS LA SOURCE PRECEDENTE
+    stage.regex {//met la regex pour le filtrage
+        expression = "^(?P<timestamp>\\S+ \\S+) \\[(?P<thread>.*)\\] (?P<level>\\S+)\\s+(?P<logger>.*) - (?P<message>.*)$"
+    }
+    // Promotion du champ extrait "level" en label Loki pour activer le filtre par niveau dans Grafana
+    stage.labels {//active le bouton pour le filtrage
+        values = { level = "" }
+    }
+    // Une fois parsé, on envoie le résultat vers Loki
+    forward_to = [loki.write.loki_receiver.receiver]
+}
+
+loki.write "loki_receiver" {
+	endpoint {
+		url = "http://monitoring-loki:3100/loki/api/v1/push"
+	}
+}
+
+
+
