@@ -68,7 +68,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - SERVLET_CONTEXT_PATH=/api
       - API_DOCS_PATH=/v3/api-docs
-      - RABBITMQ_HOST=rabbitq_container
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
@@ -81,6 +81,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - shared_logs:/app/logs #ajout d un volume pour garder une trace des log (/app/logs represente l equivalent de./log dans le ficher logback pour que les chemin soit les meme)
     networks:
       - spring_docker_amqp
 
@@ -117,6 +119,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - shared_logs:/app/logs #ajout d un volume pour garder une trace des log (/app/logs represente l equivalent de./log dans le ficher logback pour que les chemin soit les meme)
     networks:
       - spring_docker_amqp
 
@@ -144,7 +148,47 @@ services:
 
     networks:
       - spring_docker_amqp
+    # --- CONFIGURATION STACK MONITORING LOKI / ALLOY / GRAFANA ---
 
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: monitoring-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - spring_docker_amqp
+
+  alloy:
+    image: grafana/alloy:v1.1.1
+    container_name: monitoring-alloy
+    user: "root"
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+      - shared_logs:/var/log/apps:ro
+    entrypoint:
+      - /usr/bin/alloy
+      - run
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    ports:
+      - "12345:12345"
+    depends_on:
+      - loki
+    networks:
+      - spring_docker_amqp
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: monitoring-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    depends_on:
+      - loki
+    networks:
+      - spring_docker_amqp
 networks:
   spring_docker_amqp:
 
@@ -152,7 +196,9 @@ volumes:
   mysql_volume:
     external: true
     name: mysql_volume
-
+  shared_logs:
+    external: true
+    name: shared_logs
 
 #dans notre cas avec logback les fichiers log de pagamento seron dans un ".log" qui existe dans le docker et sera effacer à chaque lancement.
 
