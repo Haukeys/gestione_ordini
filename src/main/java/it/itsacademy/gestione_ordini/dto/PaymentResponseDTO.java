@@ -20,4 +20,6 @@ public class PaymentResponseDTO {
     // l'enum "TipoPagamento" di gestione_pagamento
 
     private String statoPagamento;
+    // deve matchare con quello di pagamento
+    private String nomeRicevuta;
 }
