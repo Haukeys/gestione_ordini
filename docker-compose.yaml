@@ -54,7 +54,7 @@ services:
       - spring_docker_amqp
 
   gestione-ordini:
-    image: haukeys/gestione_ordini:0.0.3
+    image: haukeys/gestione_ordini:0.0.4
     build:
       context: ../gestione_ordini
       dockerfile: Dockerfile
@@ -90,7 +90,7 @@ services:
     build:
       context: ../gestione_pagamento
       dockerfile: Dockerfile
-    image: haukeys/gestione_pagamento:0.0.3
+    image: haukeys/gestione_pagamento:0.0.4
     container_name: gestione-pagamento
     ports:
       - "8081:8080"
@@ -111,6 +111,8 @@ services:
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
+  # AJOUT DE LA VARIABLE D'ENVIRONNEMENT :
+      - STORAGE_RECEIPTS_PATH=${STORAGE_RECEIPTS_PATH}
     depends_on:
       - db
       - rabbitmq
@@ -121,6 +123,8 @@ services:
       retries: 5
     volumes:
       - shared_logs:/app/logs #ajout d un volume pour garder une trace des log (/app/logs represente l equivalent de./log dans le ficher logback pour que les chemin soit les meme)
+        # volume pour les ricevute.txt:
+      - ricevute_volume:/app/ricevute
     networks:
       - spring_docker_amqp
 
@@ -199,7 +203,9 @@ volumes:
   shared_logs:
     external: true
     name: shared_logs
-
+  ricevute_volume:
+    external: true
+    name: ricevute_volume
 #dans notre cas avec logback les fichiers log de pagamento seron dans un ".log" qui existe dans le docker et sera effacer à chaque lancement.
-
+#ricevuta volume pour enregistrer les ricevute sur le docker
 
