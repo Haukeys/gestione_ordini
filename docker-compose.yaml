@@ -111,8 +111,10 @@ services:
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
-  # AJOUT DE LA VARIABLE D'ENVIRONNEMENT :
+      # AJOUT DE LA VARIABLE D'ENVIRONNEMENT POUR STOCKER LES RICEVUTE :
       - STORAGE_RECEIPTS_PATH=${STORAGE_RECEIPTS_PATH}
+      # AJOUT
+      - JASPER_REPORTS_DIR=/app/reports
     depends_on:
       - db
       - rabbitmq
@@ -125,6 +127,8 @@ services:
       - shared_logs:/app/logs #ajout d un volume pour garder une trace des log (/app/logs represente l equivalent de./log dans le ficher logback pour que les chemin soit les meme)
         # volume pour les ricevute.txt:
       - ricevute_volume:/app/ricevute
+        # AJOUT : Montage(Bind Mount) du dossier de templates externe de l'hôte Linux vers le dossier interne du conteneur en lecture seule
+      - ${JASPER_REPORTS_DIR}:/app/reports:ro
     networks:
       - spring_docker_amqp
 
