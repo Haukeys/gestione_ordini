@@ -54,7 +54,7 @@ services:
       - spring_docker_amqp
 
   gestione-ordini:
-    image: haukeys/gestione_ordini:0.0.4
+    image: haukeys/gestione_ordini:0.0.5
     build:
       context: ../gestione_ordini
       dockerfile: Dockerfile
@@ -90,7 +90,7 @@ services:
     build:
       context: ../gestione_pagamento
       dockerfile: Dockerfile
-    image: haukeys/gestione_pagamento:0.0.4
+    image: haukeys/gestione_pagamento:0.0.5
     container_name: gestione-pagamento
     ports:
       - "8081:8080"
@@ -113,8 +113,15 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       # AJOUT DE LA VARIABLE D'ENVIRONNEMENT POUR STOCKER LES RICEVUTE :
       - STORAGE_RECEIPTS_PATH=${STORAGE_RECEIPTS_PATH}
-      # AJOUT
+      # AJOUT JASPERREPORT
       - JASPER_REPORTS_DIR=/app/reports
+      # AJOUT AWS S3
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - AWS_S3_ACCESS_KEY=${AWS_S3_ACCESS_KEY}
+      - AWS_S3_SECRET_KEY=${AWS_S3_SECRET_KEY}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
+      - STORAGE_RECEIPTS_PATH=${STORAGE_RECEIPTS_PATH}
+      - AWS_S3_FOLDER=${AWS_S3_FOLDER}
     depends_on:
       - db
       - rabbitmq
