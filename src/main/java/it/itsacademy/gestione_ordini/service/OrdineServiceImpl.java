@@ -59,6 +59,7 @@ public class OrdineServiceImpl implements OrdineService {
         PaymentRequestDTO requestDTO = new PaymentRequestDTO();
         requestDTO.setIdOrdine(idOrdine);
         requestDTO.setIdUtente(idUtente);//ajout pour le teste avec l'email
+        requestDTO.setDescrizione(ordine.getDescrizione());//ajout personnel pour avoir la description du produit
         requestDTO.setTotale(ordine.getTotale());//ajout pour test docker
         paymentPublisherAMQP.publishPaymentRequest(requestDTO);
     }

@@ -23,4 +23,9 @@ public class PaymentRequestDTO {//
     @NotNull(message = "totale non puo essere null")
     @Positive(message = "totale deve essere positivo")
     private Double totale;
+
+    // Champs de transit pour les queues asynchrones
+    private UUID idPagamento;
+    private String nomeRicevuta;
+    private String descrizione;
 }
