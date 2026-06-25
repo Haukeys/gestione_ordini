@@ -12,8 +12,8 @@ public class PaymentPublisherAMQP {
     private final RabbitTemplate rabbitTemplate;
 
     public void publishPaymentRequest(PaymentRequestDTO requestDTO) {
-        // Envoie l'objet complet converti automatiquement en JSON par Jackson
-        rabbitTemplate.convertAndSend("exam_exchange", "exam_routingKey", requestDTO);
-        System.out.println("[8080] Oggetto PaymentRequestDTO inviato come JSON.");
+        // Envoi vers l'exchange avec la clé dédiée à la file de traitement bancaire
+        rabbitTemplate.convertAndSend("orders.exchange", "order.routing.payment", requestDTO);
+        System.out.println("[8080] Oggetto PaymentRequestDTO inviato verso la coda pagamenti.");
     }
 }
