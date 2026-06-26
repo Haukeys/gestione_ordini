@@ -94,6 +94,10 @@ services:
     container_name: gestione-pagamento
     ports:
       - "8081:8080"
+    # MODIFICATION 1 : Autorise explicitement ce conteneur à lire les secrets Docker
+    secrets:
+      - aws_access_key
+      - aws_secret_key
     environment:
       - PORT=8080
       - MYSQL_URL_PAGAMENTO=${MYSQL_URL_PAGAMENTO} # reste en MYSQL_URL
@@ -117,11 +121,12 @@ services:
       - JASPER_REPORTS_DIR=/app/reports
       # AJOUT AWS S3
       - AWS_S3_REGION=${AWS_S3_REGION}
-      - AWS_S3_ACCESS_KEY=${AWS_S3_ACCESS_KEY}
-      - AWS_S3_SECRET_KEY=${AWS_S3_SECRET_KEY}
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
-      - STORAGE_RECEIPTS_PATH=${STORAGE_RECEIPTS_PATH}
       - AWS_S3_FOLDER=${AWS_S3_FOLDER}
+      #AJOUT POUR L UTILISATION DU DOCKER SECRET
+      # MODIFICATION 2 : On donne les chemins fixes montés par Docker Secrets dans le conteneur
+      - AWS_S3_ACCESS_KEY_FILE=/run/secrets/aws_access_key
+      - AWS_S3_SECRET_KEY_FILE=/run/secrets/aws_secret_key
     depends_on:
       - db
       - rabbitmq
@@ -217,6 +222,14 @@ volumes:
   ricevute_volume:
     external: true
     name: ricevute_volume
+# MODIFICATION 3 : Déclaration globale des secrets avec l'emplacement des fichiers sur ta VM Ubuntu
+secrets:
+  aws_access_key:
+    file: ./secrets/aws_access_key.txt
+  aws_secret_key:
+    file: ./secrets/aws_secret_key.txt
+
+
 #dans notre cas avec logback les fichiers log de pagamento seron dans un ".log" qui existe dans le docker et sera effacer à chaque lancement.
 #ricevuta volume pour enregistrer les ricevute sur le docker
 
