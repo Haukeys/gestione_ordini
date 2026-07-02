@@ -2,19 +2,23 @@ package it.itsacademy.gestione_ordini.entity;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.Audited;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Data
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "Ordine")
-public class Ordine {
+@Audited
+@AuditOverride(forClass = Auditable.class)
+public class Ordine extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
