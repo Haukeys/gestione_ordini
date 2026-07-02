@@ -80,10 +80,24 @@ public class OrdineServiceImpl implements OrdineService {
      */
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public OrdineResponseDTO getOrderInfo(UUID idOrdine) {
         Ordine ordine = ordineRepository.findById(idOrdine)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato"));
+
+        // Si l'ordine est dans un état transitoire, on synchronise le statut avec gestione_pagamento
+        if (ordine.getStatoOrdine() == TipoOrdine.IN_ELABORAZIONE) {
+            PaymentResponseDTO paymentResponse = paymentServiceClient.getPaymentStatusByOrdineId(idOrdine);
+            if (paymentResponse != null) {
+                if ("ACCETTATO".equalsIgnoreCase(paymentResponse.getStatoPagamento())) {
+                    ordine.setStatoOrdine(TipoOrdine.PAGATO);
+                } else if ("RIFIUTATO".equalsIgnoreCase(paymentResponse.getStatoPagamento())) {
+                    ordine.setStatoOrdine(TipoOrdine.DAPAGARE);
+                }
+                ordineRepository.save(ordine);
+            }
+        }
+
         return ordineMapper.toOrdineResponseDTO(ordine);
     }
 
